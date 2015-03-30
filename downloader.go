@@ -12,15 +12,15 @@ import (
 )
 
 type FlickrDownloader struct {
-	targetUrl   string
+	DebugMode   bool
 	InfoLogger  *log.Logger
 	DebugLogger *log.Logger
 	FatalLogger *log.Logger
 }
 
-func InitDownloader(url string) *FlickrDownloader {
+func InitDownloader(debug bool) *FlickrDownloader {
 	downloader := new(FlickrDownloader)
-	downloader.targetUrl = url
+	downloader.DebugMode = debug
 	downloader.InitLogger(os.Stdout, os.Stdout, os.Stderr)
 	return downloader
 }
@@ -33,11 +33,11 @@ func (downloader *FlickrDownloader) InitLogger(
 	downloader.InfoLogger = log.New(infoHandle,
 		"INFO: ",
 		log.Ldate|log.Ltime)
-
-	downloader.DebugLogger = log.New(warningHandle,
-		"DEBUG: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
+	if downloader.DebugMode {
+		downloader.DebugLogger = log.New(warningHandle,
+			"DEBUG: ",
+			log.Ldate|log.Ltime|log.Lshortfile)
+	}
 	downloader.FatalLogger = log.New(errorHandle,
 		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
@@ -60,12 +60,11 @@ func (downloader *FlickrDownloader) SaveAllPhoto(url, path string, maxPage int) 
 		}
 		photoPageUrls = append(photoPageUrls, us...)
 	}
-	fmt.Println("Finded " + strconv.Itoa(len(photoPageUrls)) + " photos.In " + url)
 	downloader.InfoLogger.Println("Finded " + strconv.Itoa(len(photoPageUrls)) + " photos.In " + url)
 	var wg sync.WaitGroup
 	for _, photoUrl := range photoPageUrls {
 		wg.Add(1)
-		go downloader.savePhoto(photoUrl, path)
+		go downloader.savePhoto(photoUrl, path, &wg)
 		time.Sleep(time.Second * 1)
 	}
 	wg.Wait()
@@ -81,10 +80,11 @@ func (downloader *FlickrDownloader) getPhotoUrls(url string) (uris []string, err
 	return findPhotoUrls(url)
 }
 
-func (downloader *FlickrDownloader) savePhoto(url, path string) {
+func (downloader *FlickrDownloader) savePhoto(url, path string, wg *sync.WaitGroup) {
 	trueLink, _ := findPhotoTrueLink(url, "o")
 	downloader.InfoLogger.Println("Download " + trueLink)
 	resp, err := http.Get(trueLink)
+	defer resp.Body.Close()
 	if err != nil {
 		fmt.Println(err)
 		downloader.InfoLogger.Fatal(err)
@@ -104,4 +104,5 @@ func (downloader *FlickrDownloader) savePhoto(url, path string) {
 		return
 	}
 	downloader.InfoLogger.Println("File :" + filename + " Saved.")
+	wg.Done()
 }

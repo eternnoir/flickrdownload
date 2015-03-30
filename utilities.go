@@ -30,6 +30,9 @@ func findAllPages(url string) (urls []string, err error) {
 		}
 	})
 	fmt.Println(maxpage)
+	if maxpage == 0 {
+		returls = append(returls, url+"/page1")
+	}
 	for i := 1; i <= maxpage; i++ {
 		oneurl := url + "/page" + strconv.Itoa(i)
 		returls = append(returls, oneurl)
@@ -53,7 +56,9 @@ func findPhotoUrls(url string) (uris []string, err error) {
 }
 
 func findPhotoTrueLink(url, size string) (uri string, err error) {
-	doc, err := goquery.NewDocument(url + "/sizes/" + size)
+	photoId := parsePhotoId(url)
+	fmt.Println(FLICKR_SITE + photoId + "/sizes/" + size)
+	doc, err := goquery.NewDocument(FLICKR_SITE + photoId + "/sizes/" + size)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -68,16 +73,15 @@ func findPhotoTrueLink(url, size string) (uri string, err error) {
 	return trueurl, nil
 }
 
-func ParseFileName(urls string) string {
+func parsePhotoId(urls string) string {
 	fileURL, err := url.Parse(urls)
-
 	if err != nil {
 		panic(err)
 	}
 	path := fileURL.Path
 	segments := strings.Split(path, "/")
-	fileName := segments[len(segments)-1]
-	return fileName
+	id := segments[3] + "/" + segments[4]
+	return id
 }
 
 func parseFileName(urls string) string {
