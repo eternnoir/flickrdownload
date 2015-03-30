@@ -3,6 +3,7 @@ package flickrdownloader
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -11,19 +12,41 @@ import (
 )
 
 type FlickrDownloader struct {
-	targetUrl string
+	targetUrl   string
+	InfoLogger  *log.Logger
+	DebugLogger *log.Logger
+	FatalLogger *log.Logger
 }
 
 func InitDownloader(url string) *FlickrDownloader {
 	downloader := new(FlickrDownloader)
 	downloader.targetUrl = url
+	downloader.InitLogger(os.Stdout, os.Stdout, os.Stderr)
 	return downloader
+}
+
+func (downloader *FlickrDownloader) InitLogger(
+	infoHandle io.Writer,
+	warningHandle io.Writer,
+	errorHandle io.Writer) {
+
+	downloader.InfoLogger = log.New(infoHandle,
+		"INFO: ",
+		log.Ldate|log.Ltime)
+
+	downloader.DebugLogger = log.New(warningHandle,
+		"DEBUG: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+
+	downloader.FatalLogger = log.New(errorHandle,
+		"ERROR: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 func (downloader *FlickrDownloader) SaveAllPhoto(url, path string, maxPage int) {
 	pageUrls, err := downloader.getPagesUrls(url)
 	if err != nil {
-		fmt.Println(err)
+		downloader.InfoLogger.Fatal(err)
 		return
 	}
 	photoPageUrls := []string{}
@@ -33,11 +56,12 @@ func (downloader *FlickrDownloader) SaveAllPhoto(url, path string, maxPage int) 
 		}
 		us, err := downloader.getPhotoUrls(element)
 		if err != nil {
-			fmt.Println(err)
+			downloader.InfoLogger.Fatal(err)
 		}
 		photoPageUrls = append(photoPageUrls, us...)
 	}
 	fmt.Println("Finded " + strconv.Itoa(len(photoPageUrls)) + " photos.In " + url)
+	downloader.InfoLogger.Println("Finded " + strconv.Itoa(len(photoPageUrls)) + " photos.In " + url)
 	var wg sync.WaitGroup
 	for _, photoUrl := range photoPageUrls {
 		wg.Add(1)
@@ -48,35 +72,36 @@ func (downloader *FlickrDownloader) SaveAllPhoto(url, path string, maxPage int) 
 }
 
 func (downloader *FlickrDownloader) getPagesUrls(url string) (uris []string, err error) {
-	fmt.Println("Find Page Urls " + url)
+	downloader.InfoLogger.Println("Find Page Urls " + url)
 	return findAllPages(url)
 }
 
 func (downloader *FlickrDownloader) getPhotoUrls(url string) (uris []string, err error) {
-	fmt.Println("Find Photo Urls " + url)
+	downloader.InfoLogger.Println("Find Photo Urls " + url)
 	return findPhotoUrls(url)
 }
 
 func (downloader *FlickrDownloader) savePhoto(url, path string) {
 	trueLink, _ := findPhotoTrueLink(url, "o")
-	fmt.Println("Download " + trueLink)
+	downloader.InfoLogger.Println("Download " + trueLink)
 	resp, err := http.Get(trueLink)
 	if err != nil {
 		fmt.Println(err)
+		downloader.InfoLogger.Fatal(err)
 		return
 	}
 	filename := parseFileName(trueLink)
-	fmt.Println("Save " + filename)
+	downloader.InfoLogger.Println("Save " + filename)
 	out, err := os.Create(path + "/" + filename)
 	defer out.Close()
 	if err != nil {
-		fmt.Println(err)
+		downloader.InfoLogger.Fatal(err)
 		return
 	}
 	_, ferr := io.Copy(out, resp.Body)
 	if ferr != nil {
-		fmt.Println(err)
+		downloader.InfoLogger.Fatal(ferr)
 		return
 	}
-	fmt.Println("File :" + filename + " Saved.")
+	downloader.InfoLogger.Println("File :" + filename + " Saved.")
 }

@@ -48,7 +48,6 @@ func findPhotoUrls(url string) (uris []string, err error) {
 		t, _ := s.Attr("href")
 		urls = append(urls, FLICKR_SITE+t)
 	})
-	fmt.Println("Finded " + strconv.Itoa(len(urls)) + " photos.In " + url)
 	return urls, nil
 
 }
@@ -63,10 +62,7 @@ func findPhotoTrueLink(url, size string) (uri string, err error) {
 	doc.Find("#allsizes-photo img").Each(func(i int, s *goquery.Selection) {
 		tr, isFind := s.Attr("src")
 		if isFind {
-			fmt.Println("TRUELINK: " + trueurl)
 			trueurl = tr
-		} else {
-			fmt.Println("Not Found")
 		}
 	})
 	return trueurl, nil
