@@ -29,7 +29,6 @@ func findAllPages(url string) (urls []string, err error) {
 			}
 		}
 	})
-	fmt.Println(maxpage)
 	if maxpage == 0 {
 		returls = append(returls, url+"/page1")
 	}
@@ -84,6 +83,9 @@ func parsePhotoId(urls string) string {
 	return id
 }
 
+// Get Filename by url.
+// ex: http://example.com/ex.jpg
+// It will return ex.jpg
 func parseFileName(urls string) string {
 	fileURL, err := url.Parse(urls)
 

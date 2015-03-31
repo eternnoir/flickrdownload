@@ -1,7 +1,6 @@
 package flickrdownloader
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -86,7 +85,6 @@ func (downloader *FlickrDownloader) savePhoto(url, path string, wg *sync.WaitGro
 	resp, err := http.Get(trueLink)
 	defer resp.Body.Close()
 	if err != nil {
-		fmt.Println(err)
 		downloader.InfoLogger.Fatal(err)
 		return
 	}
