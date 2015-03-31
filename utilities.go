@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var FLICKR_SITE = "https://www.flickr.com/"
+var FLICKR_SITE = "https://www.flickr.com"
 
 func findAllPages(url string) (urls []string, err error) {
 	maxpage := 0
@@ -56,8 +56,8 @@ func findPhotoUrls(url string) (uris []string, err error) {
 
 func findPhotoTrueLink(url, size string) (uri string, err error) {
 	photoId := parsePhotoId(url)
-	fmt.Println(FLICKR_SITE + photoId + "/sizes/" + size)
-	doc, err := goquery.NewDocument(FLICKR_SITE + photoId + "/sizes/" + size)
+	fmt.Println(FLICKR_SITE + "/" + photoId + "/sizes/" + size)
+	doc, err := goquery.NewDocument(FLICKR_SITE + "/" + photoId + "/sizes/" + size)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -73,13 +73,14 @@ func findPhotoTrueLink(url, size string) (uri string, err error) {
 }
 
 func parsePhotoId(urls string) string {
+	fmt.Println(urls)
 	fileURL, err := url.Parse(urls)
 	if err != nil {
 		panic(err)
 	}
 	path := fileURL.Path
 	segments := strings.Split(path, "/")
-	id := segments[3] + "/" + segments[4]
+	id := segments[2] + "/" + segments[3]
 	return id
 }
 
