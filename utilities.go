@@ -11,6 +11,7 @@ import (
 
 var FLICKR_SITE = "https://www.flickr.com"
 
+// Find all pages url by user or set.
 func findAllPages(url string) (urls []string, err error) {
 	maxpage := 0
 	returls := []string{}
@@ -39,6 +40,7 @@ func findAllPages(url string) (urls []string, err error) {
 	return returls, nil
 }
 
+// Find all photo url from page.
 func findPhotoUrls(url string) (uris []string, err error) {
 	urls := []string{}
 	doc, err := goquery.NewDocument(url)
@@ -54,6 +56,8 @@ func findPhotoUrls(url string) (uris []string, err error) {
 
 }
 
+// Find photo .jpg link by photo url.
+// It will depance on size.
 func findPhotoTrueLink(url, size string) (uri string, err error) {
 	photoId := parsePhotoId(url)
 	fmt.Println(FLICKR_SITE + "/" + photoId + "/sizes/" + size)
@@ -72,6 +76,11 @@ func findPhotoTrueLink(url, size string) (uri string, err error) {
 	return trueurl, nil
 }
 
+// Parse photo id by photo link.
+// ex; https://www.flickr.com/photos/marksein/9448406987/in/set-72157634949960809
+// will return marksein/9448406987
+// ex: https://www.flickr.com/photos/marksein/9448406987
+// will return marksein/9448406987 too.
 func parsePhotoId(urls string) string {
 	fmt.Println(urls)
 	fileURL, err := url.Parse(urls)
