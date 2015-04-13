@@ -17,6 +17,7 @@ type FlickrDownloader struct {
 	FatalLogger *log.Logger
 }
 
+// Create FlickerDownloader. Use debug para to setup logger in debug mode.
 func InitDownloader(debug bool) *FlickrDownloader {
 	downloader := new(FlickrDownloader)
 	downloader.DebugMode = debug
