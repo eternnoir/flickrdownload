@@ -48,7 +48,11 @@ func (downloader *FlickrDownloader) InitLogger(
 // path is where you want to storage downloaded photo.
 // A url often has many page, sometimes you dont want download all page at one times,
 // you can use maxPage para.
-func (downloader *FlickrDownloader) SaveAllPhoto(url, path string, maxPage int) {
+// imageSize:
+// 		o means origin.
+// 		l means large.
+//		m means Medium.
+func (downloader *FlickrDownloader) SaveAllPhoto(url, path string, maxPage int, imageSize string) {
 	pageUrls, err := downloader.getPagesUrls(url)
 	if err != nil {
 		downloader.errors(err)
@@ -69,8 +73,9 @@ func (downloader *FlickrDownloader) SaveAllPhoto(url, path string, maxPage int) 
 	var wg sync.WaitGroup
 	for _, photoUrl := range photoPageUrls {
 		wg.Add(1)
-		go downloader.savePhoto(photoUrl, path, &wg)
-		time.Sleep(time.Second * 1)
+		go downloader.savePhoto(photoUrl, path, imageSize, &wg)
+		// wait for a little time.
+		time.Sleep(1 * time.Second)
 	}
 	wg.Wait()
 }
@@ -85,8 +90,8 @@ func (downloader *FlickrDownloader) getPhotoUrls(url string) (uris []string, err
 	return findPhotoUrls(url)
 }
 
-func (downloader *FlickrDownloader) savePhoto(url, path string, wg *sync.WaitGroup) {
-	trueLink, _ := findPhotoTrueLink(url, "o")
+func (downloader *FlickrDownloader) savePhoto(url, path, imageSize string, wg *sync.WaitGroup) {
+	trueLink, _ := findPhotoTrueLink(url, imageSize)
 	downloader.debug("Download " + trueLink)
 	resp, err := http.Get(trueLink)
 	defer resp.Body.Close()
@@ -95,7 +100,7 @@ func (downloader *FlickrDownloader) savePhoto(url, path string, wg *sync.WaitGro
 		return
 	}
 	filename := parseFileName(trueLink)
-	//downloader.DebugLogger.Println("Save " + filename)
+	downloader.debug("Save " + filename)
 	out, err := os.Create(path + "/" + filename)
 	defer out.Close()
 	if err != nil {
