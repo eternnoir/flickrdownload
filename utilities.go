@@ -1,7 +1,6 @@
 package flickrdownloader
 
 import (
-	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/url"
@@ -18,7 +17,6 @@ func findAllPages(url string) (urls []string, err error) {
 	doc, err := goquery.NewDocument(url)
 	if err != nil {
 		log.Fatal(err)
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -60,7 +58,6 @@ func findPhotoUrls(url string) (uris []string, err error) {
 // It will depance on size.
 func findPhotoTrueLink(url, size string) (uri string, err error) {
 	photoId := parsePhotoId(url)
-	fmt.Println(FLICKR_SITE + "/" + photoId + "/sizes/" + size)
 	doc, err := goquery.NewDocument(FLICKR_SITE + "/" + photoId + "/sizes/" + size)
 	if err != nil {
 		log.Fatal(err)
@@ -82,7 +79,6 @@ func findPhotoTrueLink(url, size string) (uri string, err error) {
 // ex: https://www.flickr.com/photos/marksein/9448406987
 // will return marksein/9448406987 too.
 func parsePhotoId(urls string) string {
-	fmt.Println(urls)
 	fileURL, err := url.Parse(urls)
 	if err != nil {
 		panic(err)
@@ -98,7 +94,6 @@ func parsePhotoId(urls string) string {
 // It will return ex.jpg
 func parseFileName(urls string) string {
 	fileURL, err := url.Parse(urls)
-
 	if err != nil {
 		panic(err)
 	}
